@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Preiskalkulator — Saric Elektro-Prüfservice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c1420;
+    --surface: #142236;
+    --surface-2: #1a2c44;
+    --border: #23374f;
+    --border-soft: #1c2c40;
+    --text: #eaf2fb;
+    --text-dim: #8fa3bd;
+    --text-faint: #566e8a;
+    --accent: #3d8bfd;
+    --accent-2: #2563eb;
+    --accent-soft: rgba(61,139,253,0.14);
+    --accent-text: #ffffff;
+    --ok: #34b174;
+    --warn: #e2a33d;
+    --overdue: #e2544d;
+    --focus: #3d8bfd;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #eef2f7; --surface: #ffffff; --surface-2: #eef3f9;
+      --border: #d7e1ec; --border-soft: #e2e9f1;
+      --text: #101a29; --text-dim: #52607a; --text-faint: #8a99ae;
+      --accent: #1d5fe0; --accent-2: #1748b0; --accent-soft: rgba(29,95,224,0.09);
+      --accent-text: #ffffff; --ok: #1f9358; --warn: #b6741a; --overdue: #c2453f;
+      --shadow: 0 1px 2px rgba(16,26,41,0.04), 0 10px 24px -14px rgba(16,26,41,0.18);
+      --shadow-sm: 0 1px 2px rgba(16,26,41,0.06);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #eef2f7; --surface: #ffffff; --surface-2: #eef3f9;
+    --border: #d7e1ec; --border-soft: #e2e9f1;
+    --text: #101a29; --text-dim: #52607a; --text-faint: #8a99ae;
+    --accent: #1d5fe0; --accent-2: #1748b0; --accent-soft: rgba(29,95,224,0.09);
+    --accent-text: #ffffff; --ok: #1f9358; --warn: #b6741a; --overdue: #c2453f;
+    --shadow: 0 1px 2px rgba(16,26,41,0.04), 0 10px 24px -14px rgba(16,26,41,0.18);
+    --shadow-sm: 0 1px 2px rgba(16,26,41,0.06);
+    color-scheme: light;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100%;
+    background: radial-gradient(1100px 480px at 15% -8%, var(--accent-soft), transparent 60%), var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  /* Lock screen */
+  #lockScreen {
+    position: fixed; inset: 0; z-index: 100;
+    background: radial-gradient(1100px 480px at 15% -8%, var(--accent-soft), transparent 60%), var(--bg);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  #lockScreen.hidden { display: none; }
+  .lock-card {
+    background: var(--surface); border: 1px solid var(--border-soft); border-radius: 14px;
+    padding: 32px 28px; width: 100%; max-width: 340px; box-shadow: var(--shadow); text-align: center;
+  }
+  .lock-card .bolt {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 22px; margin-bottom: 14px;
+    box-shadow: 0 6px 18px -6px rgba(37,99,235,0.55);
+  }
+  .lock-card h2 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+  .lock-card p { font-size: 12.5px; color: var(--text-faint); margin: 0 0 18px; }
+  .lock-card input { width: 100%; text-align: center; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .lock-card .btn { width: 100%; }
+  .lock-error { font-size: 12px; color: var(--overdue); margin-top: 10px; min-height: 16px; }
+
+  header.top {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-soft); padding: 16px 20px;
+  }
+  .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1000px; margin: 0 auto; }
+  .brand-mark { display: flex; align-items: center; gap: 12px; }
+  .brand-mark .bolt {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 9px;
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 17px; flex-shrink: 0;
+    box-shadow: 0 4px 14px -4px rgba(37,99,235,0.55);
+  }
+  h1 { font-size: 17.5px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12px; color: var(--text-faint); font-family: 'IBM Plex Mono', monospace; margin-top: 1px; }
+  .theme-toggle {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 7px; padding: 7px 12px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer; transition: border-color .15s ease, color .15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px;
+    padding: 20px; box-shadow: var(--shadow-sm);
+  }
+  .card h2 { font-size: 14.5px; font-weight: 600; margin: 0 0 16px; letter-spacing: -0.005em; }
+  .card h2 .sub { display: block; font-size: 11.5px; color: var(--text-faint); font-weight: 400; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; }
+
+  .field { margin-bottom: 15px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+  .field .hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+  input[type="text"], input[type="number"] {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 7px; padding: 10px 12px; font-size: 14px; font-family: 'IBM Plex Mono', monospace;
+    transition: border-color .15s ease;
+  }
+  input[type="text"] { font-family: 'IBM Plex Sans', sans-serif; }
+  input:hover { border-color: var(--text-faint); }
+  input:focus { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent); }
+  .input-suffix { position: relative; }
+  .input-suffix span {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; color: var(--text-faint); font-family: 'IBM Plex Mono', monospace; pointer-events: none;
+  }
+  .input-suffix input { padding-right: 46px; }
+
+  .result-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 0; border-bottom: 1px solid var(--border-soft); gap: 12px;
+  }
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { font-size: 13px; color: var(--text-dim); }
+  .result-row .value { font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+
+  .big-result {
+    text-align: center; padding: 22px 16px; border-radius: 10px;
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    margin-bottom: 16px;
+  }
+  .big-result .label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+  .big-result .amount { font-family: 'IBM Plex Mono', monospace; font-size: 32px; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+  .big-result .per-device { font-size: 12px; color: var(--text-faint); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+
+  .compare-box {
+    margin-top: 14px; padding: 12px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .compare-box.cheaper { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+  .compare-box.pricier { background: color-mix(in srgb, var(--overdue) 14%, transparent); color: var(--overdue); }
+  .compare-box .diff { font-family: 'IBM Plex Mono', monospace; font-weight: 700; }
+
+  .assess-box {
+    margin-top: 10px; padding: 10px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 500;
+  }
+  .assess-box.good { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+  .assess-box.okay { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+  .assess-box.low { background: color-mix(in srgb, var(--overdue) 14%, transparent); color: var(--overdue); }
+
+  .btn {
+    background: linear-gradient(155deg, var(--accent), var(--accent-2)); color: var(--accent-text);
+    border: none; border-radius: 7px; padding: 10px 16px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    box-shadow: 0 2px 10px -4px rgba(37,99,235,0.55); transition: filter .15s ease, transform .1s ease;
+    width: 100%; margin-top: 4px;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn.secondary { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); box-shadow: none; }
+  .btn.secondary:hover { color: var(--text); border-color: var(--text-faint); }
+
+  .history-section { margin-top: 20px; }
+  .history-title { font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 10px; }
+  .history-list { border: 1px solid var(--border-soft); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); }
+  .history-row {
+    display: grid; grid-template-columns: 1fr auto auto auto; gap: 12px; align-items: center;
+    padding: 11px 14px; background: var(--surface); border-bottom: 1px solid var(--border-soft); font-size: 12.5px;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-row .hname { font-weight: 600; }
+  .history-row .hmeta { color: var(--text-faint); font-size: 11px; margin-top: 2px; }
+  .history-row .hprice { font-family: 'IBM Plex Mono', monospace; color: var(--accent); font-weight: 600; }
+  .history-row .hdel { background: none; border: 1px solid var(--border); color: var(--text-faint); border-radius: 5px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: inherit; }
+  .history-row .hdel:hover { color: var(--overdue); border-color: var(--overdue); }
+  .history-empty { padding: 20px; text-align: center; color: var(--text-faint); font-size: 12.5px; }
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="bolt">⚡</div>
+    <h2>Preiskalkulator</h2>
+    <p>Geschützter Bereich — bitte Passwort eingeben</p>
+    <input type="password" id="lockInput" placeholder="Passwort" autocomplete="off">
+    <button class="btn" id="lockSubmit">Entsperren</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="brand">
+    <div class="brand-mark">
+      <span class="bolt">⚡</span>
+      <div>
+        <h1>Preiskalkulator</h1>
+        <div class="brand-sub">saric-elektropruefservice.de · Angebots-Kalkulation</div>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle">Hell / Dunkel</button>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <div class="card">
+      <h2>Auftrag<span class="sub">Fahrzeit, Geräte, Sätze</span></h2>
+
+      <div class="field">
+        <label for="fKunde">Kunde (optional)</label>
+        <input type="text" id="fKunde" placeholder="z. B. Bäckerei Petersen">
+      </div>
+
+      <div class="field">
+        <label for="fFahrzeit">Fahrzeit Hin- und Rückfahrt</label>
+        <div class="input-suffix">
+          <input type="number" id="fFahrzeit" min="0" step="5" value="30">
+          <span>Min.</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fGeraete">Anzahl Geräte</label>
+        <input type="number" id="fGeraete" min="1" step="1" value="8">
+      </div>
+
+      <div class="field">
+        <label for="fMinProGeraet">Minuten pro Gerät</label>
+        <div class="input-suffix">
+          <input type="number" id="fMinProGeraet" min="0.5" step="0.25" value="6.25">
+          <span>Min.</span>
+        </div>
+        <div class="hint">Standard: 6,25 Min. (= 50 Min. für 8 Geräte, wenn sie beieinander liegen). Bei verstreuten Geräten höher ansetzen.</div>
+      </div>
+
+      <div class="field">
+        <label for="fPuffer">Pufferzeit Prüfprotokolle</label>
+        <div class="input-suffix">
+          <input type="number" id="fPuffer" min="0" step="5" value="120">
+          <span>Min.</span>
+        </div>
+        <div class="hint">Vorschlag: 120 Min. bei &lt;40 Geräten, 180 Min. ab 40 Geräten — wird automatisch vorgeschlagen, du kannst es aber jederzeit selbst anpassen.</div>
+      </div>
+
+      <div class="field">
+        <label for="fStundensatz">Dein Stundensatz</label>
+        <div class="input-suffix">
+          <input type="number" id="fStundensatz" min="0" step="1" value="45">
+          <span>€ / h</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fMarge">Marge auf Selbstkosten</label>
+        <div class="input-suffix">
+          <input type="number" id="fMarge" min="0" step="1" value="20">
+          <span>%</span>
+        </div>
+        <div class="hint">Aufschlag auf die reinen Selbstkosten — das ist dein eigentlicher Gewinn und Puffer für Unvorhergesehenes.</div>
+      </div>
+
+      <div class="field">
+        <label for="fMarkt">Marktpreis pro Gerät (optional, zum Vergleich)</label>
+        <div class="input-suffix">
+          <input type="number" id="fMarkt" min="0" step="0.5" placeholder="z. B. 9.50">
+          <span>€</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ergebnis<span class="sub">Zeitaufwand &amp; empfohlener Preis</span></h2>
+
+      <div class="big-result">
+        <div class="label">Empfohlener Angebotspreis</div>
+        <div class="amount" id="resAngebot">0,00 €</div>
+        <div class="per-device" id="resProGeraet">0,00 € pro Gerät</div>
+      </div>
+
+      <div id="compareBox"></div>
+
+      <div class="result-row"><span class="label">Prüfzeit vor Ort</span><span class="value" id="resPruefzeit">0 Min.</span></div>
+      <div class="result-row"><span class="label">Pufferzeit Protokolle</span><span class="value" id="resPuffer">0 Min.</span></div>
+      <div class="result-row"><span class="label">Fahrzeit</span><span class="value" id="resFahrzeit">0 Min.</span></div>
+      <div class="result-row"><span class="label">Gesamtaufwand</span><span class="value" id="resGesamt">0 Std.</span></div>
+      <div class="result-row"><span class="label">Selbstkosten</span><span class="value" id="resSelbstkosten">0,00 €</span></div>
+      <div class="result-row"><span class="label">Tatsächlicher Stundenlohn</span><span class="value" id="resEffektiv">0,00 €/h</span></div>
+
+      <div id="assessBox"></div>
+
+      <button class="btn secondary" id="saveBtn" style="margin-top:18px;">Berechnung speichern</button>
+    </div>
+  </div>
+
+  <div class="history-section">
+    <div class="history-title">Gespeicherte Kalkulationen</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</main>
+
+<script>
+(function() {
+  // ---- Lock ----
+  const LOCK_PASSWORD = 'sep24768';
+  const UNLOCK_KEY = 'saric_kalk_unlocked';
+  const lockScreen = document.getElementById('lockScreen');
+  const lockInput = document.getElementById('lockInput');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const lockError = document.getElementById('lockError');
+
+  function tryUnlock() {
+    if (lockInput.value === LOCK_PASSWORD) {
+      try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch (e) {}
+      lockScreen.classList.add('hidden');
+    } else {
+      lockError.textContent = 'Falsches Passwort.';
+      lockInput.value = '';
+      lockInput.focus();
+    }
+  }
+  let alreadyUnlocked = false;
+  try { alreadyUnlocked = sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch (e) {}
+  if (alreadyUnlocked) { lockScreen.classList.add('hidden'); }
+  else { setTimeout(() => lockInput.focus(), 100); }
+  lockSubmit.addEventListener('click', tryUnlock);
+  lockInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+
+  // ---- Theme ----
+  const THEME_KEY = 'saric_kalk_theme';
+  try {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+  } catch (e) {}
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : (cur === 'light' ? 'dark' : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  // ---- Inputs ----
+  const fKunde = document.getElementById('fKunde');
+  const fFahrzeit = document.getElementById('fFahrzeit');
+  const fGeraete = document.getElementById('fGeraete');
+  const fMinProGeraet = document.getElementById('fMinProGeraet');
+  const fPuffer = document.getElementById('fPuffer');
+  const fStundensatz = document.getElementById('fStundensatz');
+  const fMarge = document.getElementById('fMarge');
+  const fMarkt = document.getElementById('fMarkt');
+
+  // Pufferzeit wird bei Geräte-Änderung automatisch vorgeschlagen,
+  // solange der Nutzer das Feld nicht selbst angefasst hat.
+  let pufferTouched = false;
+  fPuffer.addEventListener('input', () => { pufferTouched = true; });
+  fGeraete.addEventListener('input', () => {
+    if (!pufferTouched) {
+      const g = Number(fGeraete.value) || 0;
+      fPuffer.value = g < 40 ? 120 : 180;
+    }
+  });
+
+  function fmtEUR(n) {
+    return n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+  function fmtMin(n) {
+    return Math.round(n).toLocaleString('de-DE') + ' Min.';
+  }
+  function fmtHours(totalMin) {
+    const h = Math.floor(totalMin / 60);
+    const m = Math.round(totalMin % 60);
+    return `${h} Std. ${m} Min.`;
+  }
+
+  function calc() {
+    const fahrzeit = Math.max(0, Number(fFahrzeit.value) || 0);
+    const geraete = Math.max(1, Number(fGeraete.value) || 0);
+    const minProGeraet = Math.max(0, Number(fMinProGeraet.value) || 0);
+    const puffer = Math.max(0, Number(fPuffer.value) || 0);
+    const stundensatz = Math.max(0, Number(fStundensatz.value) || 0);
+    const marge = Math.max(0, Number(fMarge.value) || 0);
+    const markt = fMarkt.value !== '' ? Math.max(0, Number(fMarkt.value) || 0) : null;
+
+    const pruefzeit = geraete * minProGeraet;
+    const gesamtMin = fahrzeit + pruefzeit + puffer;
+    const gesamtStunden = gesamtMin / 60;
+
+    const selbstkosten = gesamtStunden * stundensatz;
+    const angebot = selbstkosten * (1 + marge / 100);
+    const proGeraet = angebot / geraete;
+    const effektiverLohn = gesamtStunden > 0 ? angebot / gesamtStunden : 0;
+
+    document.getElementById('resPruefzeit').textContent = fmtMin(pruefzeit);
+    document.getElementById('resPuffer').textContent = fmtMin(puffer);
+    document.getElementById('resFahrzeit').textContent = fmtMin(fahrzeit);
+    document.getElementById('resGesamt').textContent = fmtHours(gesamtMin);
+    document.getElementById('resSelbstkosten').textContent = fmtEUR(selbstkosten);
+    document.getElementById('resAngebot').textContent = fmtEUR(angebot);
+    document.getElementById('resProGeraet').textContent = fmtEUR(proGeraet) + ' pro Gerät';
+    document.getElementById('resEffektiv').textContent = fmtEUR(effektiverLohn) + '/h';
+
+    const assessBox = document.getElementById('assessBox');
+    if (stundensatz > 0) {
+      const ratio = effektiverLohn / stundensatz;
+      if (ratio >= 1.15) {
+        assessBox.innerHTML = `<div class="assess-box good">Guter Schnitt: Dein tatsächlicher Stundenlohn liegt deutlich über deinem Soll-Satz von ${fmtEUR(stundensatz)}/h.</div>`;
+      } else if (ratio >= 0.95) {
+        assessBox.innerHTML = `<div class="assess-box okay">Solide: Du landest in etwa bei deinem Soll-Stundensatz von ${fmtEUR(stundensatz)}/h.</div>`;
+      } else {
+        assessBox.innerHTML = `<div class="assess-box low">Achtung: Dein tatsächlicher Stundenlohn liegt unter deinem Soll-Satz von ${fmtEUR(stundensatz)}/h — Marge oder Preis pro Gerät erhöhen.</div>`;
+      }
+    } else {
+      assessBox.innerHTML = '';
+    }
+
+    const compareBox = document.getElementById('compareBox');
+    if (markt !== null && markt > 0) {
+      const marktGesamt = markt * geraete;
+      const diff = marktGesamt - angebot;
+      if (diff >= 0) {
+        compareBox.innerHTML = `<div class="compare-box cheaper"><span>Du bist günstiger als der Markt (${fmtEUR(marktGesamt)})</span><span class="diff">−${fmtEUR(diff)}</span></div>`;
+      } else {
+        compareBox.innerHTML = `<div class="compare-box pricier"><span>Du liegst über dem Markt (${fmtEUR(marktGesamt)})</span><span class="diff">+${fmtEUR(Math.abs(diff))}</span></div>`;
+      }
+    } else {
+      compareBox.innerHTML = '';
+    }
+
+    return { kunde: fKunde.value.trim(), fahrzeit, geraete, minProGeraet, puffer, stundensatz, marge, markt, gesamtMin, selbstkosten, angebot, proGeraet, effektiverLohn };
+  }
+
+  [fFahrzeit, fGeraete, fMinProGeraet, fPuffer, fStundensatz, fMarge, fMarkt].forEach(el => {
+    el.addEventListener('input', calc);
+  });
+
+  // ---- History ----
+  const HISTORY_KEY = 'saric_kalk_history_v1';
+  let history = [];
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    history = raw ? JSON.parse(raw) : [];
+  } catch (e) { history = []; }
+
+  function saveHistory() {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (e) {}
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function renderHistory() {
+    const container = document.getElementById('historyList');
+    if (history.length === 0) {
+      container.innerHTML = '<div class="history-empty">Noch keine Kalkulationen gespeichert.</div>';
+      return;
+    }
+    let html = '';
+    [...history].reverse().forEach(h => {
+      const name = h.kunde || 'Ohne Namen';
+      const date = new Date(h.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      html += `<div class="history-row" data-id="${h.id}">
+        <div>
+          <div class="hname">${escapeHtml(name)}</div>
+          <div class="hmeta">${h.geraete} Geräte · ${Math.round(h.gesamtMin / 60 * 10) / 10} Std. gesamt · ${date}</div>
+        </div>
+        <div class="hprice">${fmtEUR(h.angebot)}</div>
+        <div class="hmeta">${fmtEUR(h.proGeraet)}/Gerät</div>
+        <button class="hdel" data-id="${h.id}">Löschen</button>
+      </div>`;
+    });
+    container.innerHTML = html;
+    container.querySelectorAll('.hdel').forEach(btn => {
+      btn.addEventListener('click', () => {
+        history = history.filter(h => h.id !== btn.dataset.id);
+        saveHistory();
+        renderHistory();
+      });
+    });
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const data = calc();
+    history.push({
+      id: 'h_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      date: new Date().toISOString(),
+      ...data
+    });
+    saveHistory();
+    renderHistory();
+  });
+
+  calc();
+  renderHistory();
+})();
+</script>
+
+</body>
+</html>
