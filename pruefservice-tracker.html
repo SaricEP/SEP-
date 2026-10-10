@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prüftermin-Planer — Saric Elektro-Prüfservice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c1420;
+    --bg-elevated: #0f1a29;
+    --surface: #142236;
+    --surface-2: #1a2c44;
+    --border: #23374f;
+    --border-soft: #1c2c40;
+    --text: #eaf2fb;
+    --text-dim: #8fa3bd;
+    --text-faint: #566e8a;
+    --accent: #3d8bfd;
+    --accent-2: #2563eb;
+    --accent-soft: rgba(61,139,253,0.14);
+    --accent-text: #ffffff;
+    --ok: #34b174;
+    --warn: #e2a33d;
+    --overdue: #e2544d;
+    --focus: #3d8bfd;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
+
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #eef2f7;
+      --bg-elevated: #e6ecf3;
+      --surface: #ffffff;
+      --surface-2: #eef3f9;
+      --border: #d7e1ec;
+      --border-soft: #e2e9f1;
+      --text: #101a29;
+      --text-dim: #52607a;
+      --text-faint: #8a99ae;
+      --accent: #1d5fe0;
+      --accent-2: #1748b0;
+      --accent-soft: rgba(29,95,224,0.09);
+      --accent-text: #ffffff;
+      --ok: #1f9358;
+      --warn: #b6741a;
+      --overdue: #c2453f;
+      --shadow: 0 1px 2px rgba(16,26,41,0.04), 0 10px 24px -14px rgba(16,26,41,0.18);
+      --shadow-sm: 0 1px 2px rgba(16,26,41,0.06);
+      color-scheme: light;
+    }
+  }
+
+  :root[data-theme="light"] {
+    --bg: #eef2f7;
+    --bg-elevated: #e6ecf3;
+    --surface: #ffffff;
+    --surface-2: #eef3f9;
+    --border: #d7e1ec;
+    --border-soft: #e2e9f1;
+    --text: #101a29;
+    --text-dim: #52607a;
+    --text-faint: #8a99ae;
+    --accent: #1d5fe0;
+    --accent-2: #1748b0;
+    --accent-soft: rgba(29,95,224,0.09);
+    --accent-text: #ffffff;
+    --ok: #1f9358;
+    --warn: #b6741a;
+    --overdue: #c2453f;
+    --shadow: 0 1px 2px rgba(16,26,41,0.04), 0 10px 24px -14px rgba(16,26,41,0.18);
+    --shadow-sm: 0 1px 2px rgba(16,26,41,0.06);
+    color-scheme: light;
+  }
+
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100%;
+    background:
+      radial-gradient(1100px 480px at 15% -8%, var(--accent-soft), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  header.top {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 16px 20px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-mark .bolt {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: #fff;
+    font-size: 17px;
+    line-height: 1;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px -4px rgba(37,99,235,0.55);
+  }
+
+  h1 {
+    font-size: 17.5px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+  }
+
+  .brand-sub {
+    font-size: 12px;
+    color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 1px;
+  }
+
+  .theme-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 7px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 22px 20px 60px;
+  }
+
+  /* Status summary strip */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .stat::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--text-faint);
+    opacity: .5;
+  }
+  .stat.overdue::before { background: var(--overdue); opacity: 1; }
+  .stat.warn::before { background: var(--warn); opacity: 1; }
+  .stat.ok::before { background: var(--ok); opacity: 1; }
+  .stat .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stat .label {
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-top: 7px;
+  }
+  .stat.overdue .num { color: var(--overdue); }
+  .stat.warn .num { color: var(--warn); }
+  .stat.ok .num { color: var(--ok); }
+
+  @media (max-width: 640px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* Layout tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .tab {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 4px;
+    margin-right: 22px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .tab:hover { color: var(--text-dim); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn .2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  input[type="text"], input[type="date"], input[type="number"], select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    transition: border-color .15s ease;
+  }
+  input:hover, select:hover { border-color: var(--text-faint); }
+  input:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+  .search { flex: 1; min-width: 160px; }
+  .btn {
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: var(--accent-text);
+    border: none;
+    border-radius: 7px;
+    padding: 9px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    box-shadow: 0 2px 10px -4px rgba(37,99,235,0.55);
+    transition: filter .15s ease, transform .1s ease;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn.secondary {
+    background: var(--surface);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
+  .btn.secondary:hover { color: var(--text); border-color: var(--text-faint); }
+  .btn.danger { background: var(--overdue); color: #fff; box-shadow: 0 2px 10px -4px rgba(226,84,77,0.55); }
+
+  /* Table / list view */
+  .list {
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: auto 1fr 110px 110px 140px auto;
+    gap: 10px;
+    align-items: center;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    background: var(--surface);
+    transition: background .12s ease;
+  }
+  .row:not(.head):hover { background: var(--surface-2); }
+  .row:last-child { border-bottom: none; }
+  .row.head {
+    background: var(--surface-2);
+    font-size: 10.5px;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 11px 16px;
+  }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px transparent;
+  }
+  .dot.overdue { background: var(--overdue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--overdue) 18%, transparent); }
+  .dot.warn { background: var(--warn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 18%, transparent); }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 16%, transparent); }
+
+  .cust-name { font-weight: 600; font-size: 14px; letter-spacing: -0.005em; }
+  .cust-meta { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .date-val { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: var(--text-dim); }
+  .status-text { font-size: 12.5px; font-weight: 600; }
+  .status-text.overdue { color: var(--overdue); }
+  .status-text.warn { color: var(--warn); }
+  .status-text.ok { color: var(--ok); }
+
+  .row-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  .empty {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-faint);
+    font-size: 13.5px;
+  }
+
+  @media (max-width: 700px) {
+    .row { grid-template-columns: auto 1fr; grid-template-areas: "dot name" "dot meta" "dot dates" "dot actions"; row-gap: 4px; padding: 14px; }
+    .row.head { display: none; }
+    .col-last, .col-next { display: flex; gap: 6px; font-size: 12px; color: var(--text-faint); }
+    .col-last::before { content: "Geprüft: "; }
+    .col-next::before { content: "Fällig: "; }
+    .row-actions { grid-area: actions; margin-top: 4px; }
+  }
+
+  /* Calendar view */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .cal-month {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .15s ease;
+  }
+  .cal-month-head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cal-month-head.current {
+    background: var(--accent-soft);
+    border-bottom-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .cal-month-head.current .cal-month-title { color: var(--accent); }
+  .cal-month-title { font-weight: 600; font-size: 13.5px; }
+  .cal-month-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    background: var(--surface-2);
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+  .cal-month-body { padding: 4px 0; max-height: 260px; overflow-y: auto; }
+  .cal-entry {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .cal-entry .name { flex: 1; }
+  .cal-entry .day { color: var(--text-faint); font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; }
+  .cal-empty { padding: 16px 14px; color: var(--text-faint); font-size: 12.5px; }
+
+  /* Modal / form */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(6,12,20,0.6);
+    backdrop-filter: blur(2px);
+    z-index: 40;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    overflow-y: auto;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5);
+    animation: modalIn .18s ease;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+  .modal h2 { font-size: 16.5px; margin: 0 0 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; font-weight: 500; }
+  .field input, .field select { width: 100%; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+  .hint { font-size: 12px; color: var(--accent); margin-top: 4px; font-weight: 500; }
+
+  .fab-add {
+    margin-left: auto;
+  }
+
+  /* Lock screen */
+  #lockScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background:
+      radial-gradient(1100px 480px at 15% -8%, var(--accent-soft), transparent 60%),
+      var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #lockScreen.hidden { display: none; }
+  .lock-card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 340px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .lock-card .bolt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: #fff;
+    font-size: 22px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 18px -6px rgba(37,99,235,0.55);
+  }
+  .lock-card h2 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+  .lock-card p { font-size: 12.5px; color: var(--text-faint); margin: 0 0 18px; }
+  .lock-card input {
+    width: 100%;
+    text-align: center;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .lock-card .btn { width: 100%; }
+  .lock-error {
+    font-size: 12px;
+    color: var(--overdue);
+    margin-top: 10px;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="bolt">⚡</div>
+    <h2>Prüftermin-Planer</h2>
+    <p>Geschützter Bereich — bitte Passwort eingeben</p>
+    <input type="password" id="lockInput" placeholder="Passwort" autocomplete="off">
+    <button class="btn" id="lockSubmit">Entsperren</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="brand">
+    <div class="brand-mark">
+      <span class="bolt">⚡</span>
+      <div>
+        <h1>Prüftermin-Planer</h1>
+        <div class="brand-sub">saric-elektropruefservice.de · DGUV V3</div>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle">Hell / Dunkel</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="stats">
+    <div class="stat overdue">
+      <div class="num" id="statOverdue">0</div>
+      <div class="label">Überfällig</div>
+    </div>
+    <div class="stat warn">
+      <div class="num" id="statSoon">0</div>
+      <div class="label">Fällig in 30 Tagen</div>
+    </div>
+    <div class="stat ok">
+      <div class="num" id="statOk">0</div>
+      <div class="label">Im Plan</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="statTotal">0</div>
+      <div class="label">Kunden gesamt</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="listPanel">Liste</button>
+    <button class="tab" data-panel="calPanel">Kalender</button>
+  </div>
+
+  <div class="panel active" id="listPanel">
+    <div class="toolbar">
+      <input type="text" class="search" id="searchInput" placeholder="Kunde suchen…">
+      <select id="filterSelect">
+        <option value="all">Alle Status</option>
+        <option value="overdue">Überfällig</option>
+        <option value="warn">Fällig in 30 Tagen</option>
+        <option value="ok">Im Plan</option>
+      </select>
+      <button class="btn secondary" id="exportBtn">Backup speichern</button>
+      <button class="btn secondary" id="importBtn">Backup laden</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      <button class="btn fab-add" id="addBtnList">+ Kunde</button>
+    </div>
+    <div class="list" id="listContainer"></div>
+  </div>
+
+  <div class="panel" id="calPanel">
+    <div class="toolbar">
+      <div style="color:var(--text-faint); font-size:12.5px; align-self:center;">Nächste 12 Monate — wer wann kontaktiert werden muss</div>
+      <button class="btn fab-add" id="addBtnCal">+ Kunde</button>
+    </div>
+    <div class="cal-grid" id="calContainer"></div>
+  </div>
+
+</main>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <h2 id="modalTitle">Kunde hinzufügen</h2>
+    <input type="hidden" id="editId">
+    <div class="field">
+      <label for="fName">Kunde / Firma</label>
+      <input type="text" id="fName" placeholder="z. B. Bäckerei Petersen">
+    </div>
+    <div class="field">
+      <label for="fMeta">Notiz (Geräteanzahl, Ansprechpartner, Kontakt…)</label>
+      <input type="text" id="fMeta" placeholder="z. B. 34 Geräte, Herr Petersen, 0171…">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="fLast">Letzte Prüfung</label>
+        <input type="date" id="fLast">
+      </div>
+      <div class="field">
+        <label for="fInterval">Intervall (Monate)</label>
+        <input type="number" id="fInterval" min="1" max="60" value="12">
+      </div>
+    </div>
+    <div class="hint" id="nextPreview"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" id="cancelBtn">Abbrechen</button>
+      <button class="btn danger" id="deleteBtn" style="display:none;">Löschen</button>
+      <button class="btn" id="saveBtn">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ---- Simple access lock (deters casual visitors, not a strong login) ----
+  const LOCK_PASSWORD = 'sep24768';
+  const UNLOCK_KEY = 'saric_pruef_unlocked';
+
+  const lockScreen = document.getElementById('lockScreen');
+  const lockInput = document.getElementById('lockInput');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const lockError = document.getElementById('lockError');
+
+  function tryUnlock() {
+    if (lockInput.value === LOCK_PASSWORD) {
+      try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch (e) {}
+      lockScreen.classList.add('hidden');
+    } else {
+      lockError.textContent = 'Falsches Passwort.';
+      lockInput.value = '';
+      lockInput.focus();
+    }
+  }
+
+  let alreadyUnlocked = false;
+  try { alreadyUnlocked = sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch (e) {}
+  if (alreadyUnlocked) {
+    lockScreen.classList.add('hidden');
+  } else {
+    setTimeout(() => lockInput.focus(), 100);
+  }
+  lockSubmit.addEventListener('click', tryUnlock);
+  lockInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+
+  const STORAGE_KEY = 'saric_pruef_customers_v1';
+  const THEME_KEY = 'saric_pruef_theme';
+
+  let customers = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    customers = raw ? JSON.parse(raw) : [];
+  } catch (e) { customers = []; }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(customers)); }
+    catch (e) { console.error('Speichern fehlgeschlagen', e); }
+  }
+
+  // Theme toggle
+  try {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+  } catch (e) {}
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : (cur === 'light' ? 'dark' : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  function addMonths(dateStr, months) {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setMonth(d.getMonth() + Number(months));
+    return d;
+  }
+
+  function fmtDate(d) {
+    if (typeof d === 'string') d = new Date(d + 'T00:00:00');
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function todayMidnight() {
+    const t = new Date();
+    t.setHours(0,0,0,0);
+    return t;
+  }
+
+  function getStatus(nextDate) {
+    const today = todayMidnight();
+    const diffDays = Math.round((nextDate - today) / 86400000);
+    if (diffDays < 0) return 'overdue';
+    if (diffDays <= 30) return 'warn';
+    return 'ok';
+  }
+
+  function statusLabel(status, nextDate) {
+    const today = todayMidnight();
+    const diffDays = Math.round((nextDate - today) / 86400000);
+    if (status === 'overdue') return `${Math.abs(diffDays)} Tage überfällig`;
+    if (status === 'warn') return diffDays === 0 ? 'heute fällig' : `in ${diffDays} Tagen`;
+    return `in ${diffDays} Tagen`;
+  }
+
+  function computeNext(c) {
+    return addMonths(c.last, c.interval);
+  }
+
+  // ---- Rendering: stats ----
+  function renderStats() {
+    let overdue = 0, warn = 0, ok = 0;
+    customers.forEach(c => {
+      const s = getStatus(computeNext(c));
+      if (s === 'overdue') overdue++;
+      else if (s === 'warn') warn++;
+      else ok++;
+    });
+    document.getElementById('statOverdue').textContent = overdue;
+    document.getElementById('statSoon').textContent = warn;
+    document.getElementById('statOk').textContent = ok;
+    document.getElementById('statTotal').textContent = customers.length;
+  }
+
+  // ---- Rendering: list ----
+  function renderList() {
+    const container = document.getElementById('listContainer');
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    const filter = document.getElementById('filterSelect').value;
+
+    let items = customers.map(c => {
+      const next = computeNext(c);
+      return { ...c, next, status: getStatus(next) };
+    });
+
+    if (query) {
+      items = items.filter(c => c.name.toLowerCase().includes(query) || (c.meta || '').toLowerCase().includes(query));
+    }
+    if (filter !== 'all') {
+      items = items.filter(c => c.status === filter);
+    }
+
+    items.sort((a, b) => a.next - b.next);
+
+    if (items.length === 0) {
+      container.innerHTML = `<div class="empty">${customers.length === 0 ? 'Noch keine Kunden erfasst. Leg oben den ersten an.' : 'Keine Treffer für diese Suche/Filter.'}</div>`;
+      return;
+    }
+
+    let html = `<div class="row head">
+      <div></div>
+      <div>Kunde</div>
+      <div class="col-last">Letzte Prüfung</div>
+      <div class="col-next">Nächste Prüfung</div>
+      <div>Status</div>
+      <div></div>
+    </div>`;
+
+    items.forEach(c => {
+      html += `
+        <div class="row" data-id="${c.id}">
+          <div class="dot ${c.status}"></div>
+          <div>
+            <div class="cust-name">${escapeHtml(c.name)}</div>
+            ${c.meta ? `<div class="cust-meta">${escapeHtml(c.meta)}</div>` : ''}
+          </div>
+          <div class="date-val col-last">${fmtDate(c.last)}</div>
+          <div class="date-val col-next">${fmtDate(c.next)}</div>
+          <div class="status-text ${c.status}">${statusLabel(c.status, c.next)}</div>
+          <div class="row-actions">
+            <button class="icon-btn" data-action="edit" data-id="${c.id}">Bearbeiten</button>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+    container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => openModal(btn.dataset.id));
+    });
+  }
+
+  // ---- Rendering: calendar ----
+  function renderCalendar() {
+    const container = document.getElementById('calContainer');
+    const today = todayMidnight();
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      months.push(d);
+    }
+
+    const items = customers.map(c => ({ ...c, next: computeNext(c) }));
+
+    let html = '';
+    months.forEach((m, idx) => {
+      const label = m.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+      const inMonth = items.filter(c => c.next.getFullYear() === m.getFullYear() && c.next.getMonth() === m.getMonth())
+                            .sort((a, b) => a.next - b.next);
+      html += `<div class="cal-month">
+        <div class="cal-month-head ${idx === 0 ? 'current' : ''}">
+          <div class="cal-month-title">${capitalize(label)}</div>
+          <div class="cal-month-count">${inMonth.length}</div>
+        </div>
+        <div class="cal-month-body">`;
+      if (inMonth.length === 0) {
+        html += `<div class="cal-empty">Keine Prüfungen fällig</div>`;
+      } else {
+        inMonth.forEach(c => {
+          const status = getStatus(c.next);
+          html += `<div class="cal-entry">
+            <span class="dot ${status}"></span>
+            <span class="name">${escapeHtml(c.name)}</span>
+            <span class="day">${c.next.getDate()}.</span>
+          </div>`;
+        });
+      }
+      html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function renderAll() {
+    renderStats();
+    renderList();
+    renderCalendar();
+  }
+
+  // ---- Tabs ----
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.panel).classList.add('active');
+    });
+  });
+
+  // ---- Search / filter ----
+  document.getElementById('searchInput').addEventListener('input', renderList);
+  document.getElementById('filterSelect').addEventListener('change', renderList);
+
+  // ---- Modal ----
+  const backdrop = document.getElementById('modalBackdrop');
+  const fName = document.getElementById('fName');
+  const fMeta = document.getElementById('fMeta');
+  const fLast = document.getElementById('fLast');
+  const fInterval = document.getElementById('fInterval');
+  const editId = document.getElementById('editId');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const modalTitle = document.getElementById('modalTitle');
+  const nextPreview = document.getElementById('nextPreview');
+
+  function openModal(id) {
+    if (id) {
+      const c = customers.find(x => x.id === id);
+      if (!c) return;
+      modalTitle.textContent = 'Kunde bearbeiten';
+      editId.value = c.id;
+      fName.value = c.name;
+      fMeta.value = c.meta || '';
+      fLast.value = c.last;
+      fInterval.value = c.interval;
+      deleteBtn.style.display = 'inline-block';
+    } else {
+      modalTitle.textContent = 'Kunde hinzufügen';
+      editId.value = '';
+      fName.value = '';
+      fMeta.value = '';
+      const t = new Date();
+      fLast.value = t.toISOString().slice(0, 10);
+      fInterval.value = 12;
+      deleteBtn.style.display = 'none';
+    }
+    updatePreview();
+    backdrop.classList.add('open');
+    setTimeout(() => fName.focus(), 50);
+  }
+
+  function closeModal() {
+    backdrop.classList.remove('open');
+  }
+
+  function updatePreview() {
+    if (fLast.value && fInterval.value) {
+      const next = addMonths(fLast.value, fInterval.value);
+      nextPreview.textContent = `Nächste fällige Prüfung: ${fmtDate(next)}`;
+    } else {
+      nextPreview.textContent = '';
+    }
+  }
+  fLast.addEventListener('input', updatePreview);
+  fInterval.addEventListener('input', updatePreview);
+
+  // ---- Backup: Export / Import ----
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(customers, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `pruefservice-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  const importFile = document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click', () => importFile.click());
+  importFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!Array.isArray(data)) throw new Error('ungültiges Format');
+        const valid = data.every(c => c && typeof c.name === 'string' && typeof c.last === 'string');
+        if (!valid) throw new Error('ungültiges Format');
+        const replace = customers.length === 0 || confirm(`${data.length} Kunden aus der Datei laden und aktuelle Liste (${customers.length} Kunden) ersetzen? Abbrechen = zusammenführen.`);
+        if (replace) {
+          customers = data;
+        } else {
+          const existingIds = new Set(customers.map(c => c.id));
+          data.forEach(c => { if (!existingIds.has(c.id)) customers.push(c); });
+        }
+        save();
+        renderAll();
+      } catch (err) {
+        alert('Diese Datei sieht nicht wie ein gültiges Backup aus.');
+      }
+      importFile.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('addBtnList').addEventListener('click', () => openModal(null));
+  document.getElementById('addBtnCal').addEventListener('click', () => openModal(null));
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const name = fName.value.trim();
+    if (!name) { fName.focus(); return; }
+    if (!fLast.value) { fLast.focus(); return; }
+    const interval = Math.max(1, Number(fInterval.value) || 12);
+
+    if (editId.value) {
+      const c = customers.find(x => x.id === editId.value);
+      if (c) {
+        c.name = name;
+        c.meta = fMeta.value.trim();
+        c.last = fLast.value;
+        c.interval = interval;
+      }
+    } else {
+      customers.push({
+        id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        name: name,
+        meta: fMeta.value.trim(),
+        last: fLast.value,
+        interval: interval
+      });
+    }
+    save();
+    closeModal();
+    renderAll();
+  });
+
+  deleteBtn.addEventListener('click', () => {
+    if (!editId.value) return;
+    customers = customers.filter(x => x.id !== editId.value);
+    save();
+    closeModal();
+    renderAll();
+  });
+
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
