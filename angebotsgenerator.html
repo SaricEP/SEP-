@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Angebots-Generator — Saric Elektro-Prüfservice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c1420;
+    --surface: #142236;
+    --surface-2: #1a2c44;
+    --border: #23374f;
+    --border-soft: #1c2c40;
+    --text: #eaf2fb;
+    --text-dim: #8fa3bd;
+    --text-faint: #566e8a;
+    --accent: #3d8bfd;
+    --accent-2: #2563eb;
+    --accent-soft: rgba(61,139,253,0.14);
+    --accent-text: #ffffff;
+    --ok: #34b174;
+    --warn: #e2a33d;
+    --overdue: #e2544d;
+    --focus: #3d8bfd;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.35);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #eef2f7; --surface: #ffffff; --surface-2: #eef3f9;
+      --border: #d7e1ec; --border-soft: #e2e9f1;
+      --text: #101a29; --text-dim: #52607a; --text-faint: #8a99ae;
+      --accent: #1d5fe0; --accent-2: #1748b0; --accent-soft: rgba(29,95,224,0.09);
+      --accent-text: #ffffff; --ok: #1f9358; --warn: #b6741a; --overdue: #c2453f;
+      --shadow: 0 1px 2px rgba(16,26,41,0.04), 0 10px 24px -14px rgba(16,26,41,0.18);
+      --shadow-sm: 0 1px 2px rgba(16,26,41,0.06);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #eef2f7; --surface: #ffffff; --surface-2: #eef3f9;
+    --border: #d7e1ec; --border-soft: #e2e9f1;
+    --text: #101a29; --text-dim: #52607a; --text-faint: #8a99ae;
+    --accent: #1d5fe0; --accent-2: #1748b0; --accent-soft: rgba(29,95,224,0.09);
+    --accent-text: #ffffff; --ok: #1f9358; --warn: #b6741a; --overdue: #c2453f;
+    --shadow: 0 1px 2px rgba(16,26,41,0.04), 0 10px 24px -14px rgba(16,26,41,0.18);
+    --shadow-sm: 0 1px 2px rgba(16,26,41,0.06);
+    color-scheme: light;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); height: 100%; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100%;
+    background: radial-gradient(1100px 480px at 15% -8%, var(--accent-soft), transparent 60%), var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  /* Lock screen */
+  #lockScreen {
+    position: fixed; inset: 0; z-index: 100;
+    background: radial-gradient(1100px 480px at 15% -8%, var(--accent-soft), transparent 60%), var(--bg);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  #lockScreen.hidden { display: none; }
+  .lock-card {
+    background: var(--surface); border: 1px solid var(--border-soft); border-radius: 14px;
+    padding: 32px 28px; width: 100%; max-width: 340px; box-shadow: var(--shadow); text-align: center;
+  }
+  .lock-card .bolt {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 22px; margin-bottom: 14px;
+    box-shadow: 0 6px 18px -6px rgba(37,99,235,0.55);
+  }
+  .lock-card h2 { font-size: 16px; margin: 0 0 4px; font-weight: 600; }
+  .lock-card p { font-size: 12.5px; color: var(--text-faint); margin: 0 0 18px; }
+  .lock-card input { width: 100%; text-align: center; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .lock-card .btn { width: 100%; }
+  .lock-error { font-size: 12px; color: var(--overdue); margin-top: 10px; min-height: 16px; }
+
+  header.top {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-soft); padding: 16px 20px;
+  }
+  .brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1100px; margin: 0 auto; }
+  .brand-mark { display: flex; align-items: center; gap: 12px; }
+  .brand-mark .bolt {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 9px;
+    background: linear-gradient(155deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 17px; flex-shrink: 0;
+    box-shadow: 0 4px 14px -4px rgba(37,99,235,0.55);
+  }
+  h1 { font-size: 17.5px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12px; color: var(--text-faint); font-family: 'IBM Plex Mono', monospace; margin-top: 1px; }
+  .theme-toggle {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 7px; padding: 7px 12px; font-size: 12px; font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer; transition: border-color .15s ease, color .15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px;
+    padding: 20px; box-shadow: var(--shadow-sm); margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14px; font-weight: 600; margin: 0 0 14px; letter-spacing: -0.005em; }
+  .card h2 .sub { display: block; font-size: 11px; color: var(--text-faint); font-weight: 400; margin-top: 3px; font-family: 'IBM Plex Mono', monospace; }
+
+  .field { margin-bottom: 13px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 11.5px; color: var(--text-dim); margin-bottom: 5px; font-weight: 500; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  input[type="text"], input[type="number"], input[type="date"], textarea {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 7px; padding: 9px 11px; font-size: 13.5px; font-family: inherit;
+    transition: border-color .15s ease;
+  }
+  textarea { resize: vertical; min-height: 54px; font-family: inherit; }
+  input:hover, textarea:hover { border-color: var(--text-faint); }
+  input:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent); }
+
+  .items-table { width: 100%; }
+  .item-row {
+    display: grid; grid-template-columns: 1fr 60px 80px 90px auto;
+    gap: 8px; align-items: end; margin-bottom: 10px;
+  }
+  .item-row .field { margin-bottom: 0; }
+  @media (max-width: 500px) {
+    .item-row { grid-template-columns: 1fr 1fr; grid-template-areas: "desc desc" "menge preis" "summe del"; }
+    .item-row .f-desc { grid-area: desc; }
+    .item-row .f-menge { grid-area: menge; }
+    .item-row .f-preis { grid-area: preis; }
+    .item-row .f-summe { grid-area: summe; }
+    .item-row .f-del { grid-area: del; }
+  }
+  .item-sum { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--text-dim); padding: 9px 0; text-align: right; }
+  .item-del {
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text-faint);
+    border-radius: 7px; padding: 9px 10px; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .item-del:hover { color: var(--overdue); border-color: var(--overdue); }
+
+  .btn {
+    background: linear-gradient(155deg, var(--accent), var(--accent-2)); color: var(--accent-text);
+    border: none; border-radius: 7px; padding: 10px 16px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    box-shadow: 0 2px 10px -4px rgba(37,99,235,0.55); transition: filter .15s ease, transform .1s ease;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn.secondary { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); box-shadow: none; }
+  .btn.secondary:hover { color: var(--text); border-color: var(--text-faint); }
+  .btn.full { width: 100%; margin-top: 6px; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .checkbox-field { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim); margin-bottom: 13px; }
+  .checkbox-field input { width: auto; }
+
+  /* Preview document */
+  .doc-wrap { position: sticky; top: 90px; }
+  .doc {
+    background: #ffffff; color: #1a1a1a; border-radius: 10px; box-shadow: var(--shadow);
+    padding: 44px 40px; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; line-height: 1.5;
+    max-width: 100%; min-height: 500px;
+  }
+  .doc .doc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+  .doc .doc-brand { font-size: 16px; font-weight: 700; color: #1d5fe0; }
+  .doc .doc-brand-sub { font-size: 11px; color: #667; margin-top: 2px; }
+  .doc .doc-meta { text-align: right; font-size: 11.5px; color: #445; }
+  .doc .doc-meta div { margin-bottom: 2px; }
+  .doc .doc-addr { margin-bottom: 28px; font-size: 12.5px; white-space: pre-line; }
+  .doc .doc-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .doc .doc-intro { font-size: 12.5px; color: #445; margin-bottom: 18px; }
+  .doc table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+  .doc th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .02em; color: #778; border-bottom: 1px solid #ccd; padding: 6px 4px; }
+  .doc th.num, .doc td.num { text-align: right; }
+  .doc td { padding: 8px 4px; border-bottom: 1px solid #eef; font-size: 12.5px; }
+  .doc .doc-total-row td { border-bottom: none; padding-top: 12px; font-weight: 700; font-size: 13.5px; }
+  .doc .doc-note { font-size: 11px; color: #667; margin-top: 18px; }
+  .doc .doc-closing { font-size: 12.5px; color: #334; margin-top: 30px; line-height: 1.6; }
+  .doc #docSignatur { white-space: pre-line; font-weight: 600; }
+  .doc .doc-footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid #ddd; font-size: 10.5px; color: #778; white-space: pre-line; }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body * { visibility: hidden; }
+    .doc, .doc * { visibility: visible; }
+    .doc {
+      position: absolute; top: 0; left: 0;
+      width: 210mm; min-height: 297mm;
+      box-shadow: none; border-radius: 0;
+      padding: 22mm 20mm;
+      font-size: 11.5pt;
+    }
+  }
+
+  /* Bildschirm-Vorschau im A4-Seitenverhältnis */
+  .doc { width: 100%; max-width: 210mm; aspect-ratio: 210 / 297; overflow-y: auto; }
+  @media (max-width: 900px) { .doc { aspect-ratio: auto; } }
+</style>
+</head>
+<body>
+
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="bolt">⚡</div>
+    <h2>Angebots-Generator</h2>
+    <p>Geschützter Bereich — bitte Passwort eingeben</p>
+    <input type="password" id="lockInput" placeholder="Passwort" autocomplete="off">
+    <button class="btn" id="lockSubmit">Entsperren</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="brand">
+    <div class="brand-mark">
+      <span class="bolt">⚡</span>
+      <div>
+        <h1>Angebots-Generator</h1>
+        <div class="brand-sub">saric-elektropruefservice.de · Angebote erstellen</div>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle">Hell / Dunkel</button>
+  </div>
+</header>
+
+<main>
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2>Deine Firma<span class="sub">einmalig ausfüllen — wird gemerkt</span></h2>
+        <div class="field">
+          <label for="fTelefon">Telefon</label>
+          <input type="text" id="fTelefon" placeholder="z. B. 0171 1234567">
+        </div>
+        <div class="field">
+          <label for="fEmail">E-Mail</label>
+          <input type="text" id="fEmail" placeholder="z. B. info@saric-elektropruefservice.de">
+        </div>
+        <div class="field">
+          <label for="fIban">IBAN (für Zahlungshinweis im Angebot)</label>
+          <input type="text" id="fIban" placeholder="DE00 0000 0000 0000 0000 00">
+        </div>
+        <div class="field">
+          <label for="fSteuernummer">Steuernummer (optional — bei Angeboten nicht Pflicht, nur bei Rechnungen)</label>
+          <input type="text" id="fSteuernummer" placeholder="z. B. 12/345/67890">
+        </div>
+        <div class="field">
+          <label for="fInhaber">Inhaber (vollständiger Name — Pflichtangabe als Einzelunternehmer)</label>
+          <input type="text" id="fInhaber" placeholder="Vorname Nachname">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Angebot<span class="sub">Nummer, Datum, Gültigkeit</span></h2>
+        <div class="field-row">
+          <div class="field">
+            <label for="fNummer">Angebotsnummer</label>
+            <input type="text" id="fNummer">
+          </div>
+          <div class="field">
+            <label for="fDatum">Datum</label>
+            <input type="date" id="fDatum">
+          </div>
+        </div>
+        <div class="field">
+          <label for="fGueltig">Gültig bis</label>
+          <input type="date" id="fGueltig">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Kunde<span class="sub">Empfänger des Angebots</span></h2>
+        <div class="field">
+          <label for="fKundeName">Name / Firma</label>
+          <input type="text" id="fKundeName" placeholder="z. B. Bäckerei Petersen">
+        </div>
+        <div class="field">
+          <label for="fKundeAdresse">Adresse</label>
+          <textarea id="fKundeAdresse" placeholder="Straße Nr.&#10;PLZ Ort"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Positionen<span class="sub">Menge × Einzelpreis</span></h2>
+        <div class="items-table" id="itemsTable"></div>
+        <button class="btn secondary" id="addItemBtn">+ Position</button>
+      </div>
+
+      <div class="card">
+        <h2>Zusatz<span class="sub">Hinweise &amp; Anmerkungen</span></h2>
+        <div class="checkbox-field">
+          <input type="checkbox" id="fKleinunternehmer" checked>
+          <label for="fKleinunternehmer" style="margin:0;">Kleinunternehmer-Hinweis (§19 UStG — keine USt. ausgewiesen)</label>
+        </div>
+        <div class="field">
+          <label for="fAnmerkung">Anmerkungen / Leistungsbeschreibung (optional)</label>
+          <textarea id="fAnmerkung" placeholder="z. B. Prüfung nach DIN VDE 0701-0702, inkl. Prüfplaketten und Prüfprotokoll"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="printBtn" style="flex:1;">Drucken / Als PDF speichern</button>
+        <button class="btn secondary" id="saveBtn">Speichern</button>
+        <button class="btn secondary" id="newBtn">Neues Angebot</button>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>Gespeicherte Angebote</h2>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <div class="doc-wrap">
+      <div class="doc" id="docPreview">
+        <div class="doc-header">
+          <div>
+            <div class="doc-brand">Saric Elektro-Prüfservice</div>
+            <div class="doc-brand-sub">Apenrader Weg 40 · 24768 Rendsburg</div>
+            <div class="doc-brand-sub" id="docKontakt"></div>
+          </div>
+          <div class="doc-meta">
+            <div><strong>Angebot</strong> <span id="docNummer"></span></div>
+            <div>Datum: <span id="docDatum"></span></div>
+            <div>Gültig bis: <span id="docGueltig"></span></div>
+          </div>
+        </div>
+        <div class="doc-addr" id="docAdresse"></div>
+        <div class="doc-title">Angebot <span id="docNummer2"></span></div>
+        <div class="doc-intro">Vielen Dank für Ihr Interesse an unserem Prüfservice. Gerne unterbreiten wir Ihnen das folgende, unverbindliche Angebot:</div>
+        <table>
+          <thead>
+            <tr><th>Beschreibung</th><th class="num">Menge</th><th class="num">Einzelpreis</th><th class="num">Summe</th></tr>
+          </thead>
+          <tbody id="docItems"></tbody>
+          <tr><td colspan="3" style="padding-top:12px;">Nettobetrag</td><td class="num" style="padding-top:12px;" id="docNetto">0,00 €</td></tr>
+          <tr id="docUstRow"><td colspan="3">zzgl. Umsatzsteuer (0 % gem. § 19 UStG)</td><td class="num">0,00 €</td></tr>
+          <tr class="doc-total-row"><td colspan="3">Gesamtbetrag (Brutto)</td><td class="num" id="docGesamt">0,00 €</td></tr>
+        </table>
+        <div class="doc-note" id="docKleinunternehmer">Gemäß § 19 UStG wird keine Umsatzsteuer berechnet. Der Bruttobetrag entspricht daher dem Nettobetrag.</div>
+        <div class="doc-note" id="docAnmerkung"></div>
+
+        <div class="doc-closing">
+          Wir würden uns freuen, den Auftrag für Sie durchführen zu dürfen. Für Rückfragen stehen wir Ihnen jederzeit gerne zur Verfügung.
+          <br><br>
+          Mit freundlichen Grüßen<br>
+          <span id="docSignatur">Saric Elektro-Prüfservice</span>
+        </div>
+
+        <div class="doc-footer" id="docFooter"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function() {
+  // ---- Lock ----
+  const LOCK_PASSWORD = 'sep24768';
+  const UNLOCK_KEY = 'saric_ang_unlocked';
+  const lockScreen = document.getElementById('lockScreen');
+  const lockInput = document.getElementById('lockInput');
+  const lockSubmit = document.getElementById('lockSubmit');
+  const lockError = document.getElementById('lockError');
+  function tryUnlock() {
+    if (lockInput.value === LOCK_PASSWORD) {
+      try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch (e) {}
+      lockScreen.classList.add('hidden');
+    } else {
+      lockError.textContent = 'Falsches Passwort.';
+      lockInput.value = '';
+      lockInput.focus();
+    }
+  }
+  let alreadyUnlocked = false;
+  try { alreadyUnlocked = sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch (e) {}
+  if (alreadyUnlocked) { lockScreen.classList.add('hidden'); }
+  else { setTimeout(() => lockInput.focus(), 100); }
+  lockSubmit.addEventListener('click', tryUnlock);
+  lockInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+
+  // ---- Theme ----
+  const THEME_KEY = 'saric_ang_theme';
+  try {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+  } catch (e) {}
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : (cur === 'light' ? 'dark' : (matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark'));
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  // ---- Persisted sender info ----
+  const SENDER_KEY = 'saric_ang_sender';
+  const fTelefon = document.getElementById('fTelefon');
+  const fEmail = document.getElementById('fEmail');
+  const fIban = document.getElementById('fIban');
+  const fSteuernummer = document.getElementById('fSteuernummer');
+  const fInhaber = document.getElementById('fInhaber');
+  try {
+    const raw = localStorage.getItem(SENDER_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      fTelefon.value = s.telefon || '';
+      fEmail.value = s.email || '';
+      fIban.value = s.iban || '';
+      fSteuernummer.value = s.steuernummer || '';
+      fInhaber.value = s.inhaber || '';
+    }
+  } catch (e) {}
+  function saveSender() {
+    try { localStorage.setItem(SENDER_KEY, JSON.stringify({ telefon: fTelefon.value, email: fEmail.value, iban: fIban.value, steuernummer: fSteuernummer.value, inhaber: fInhaber.value })); } catch (e) {}
+  }
+  [fTelefon, fEmail, fIban, fSteuernummer, fInhaber].forEach(el => el.addEventListener('input', () => { saveSender(); render(); }));
+
+  // ---- Angebotsnummer counter ----
+  const COUNTER_KEY = 'saric_ang_counter';
+  function nextNummer() {
+    let n = 1;
+    try { n = parseInt(localStorage.getItem(COUNTER_KEY) || '0', 10) + 1; } catch (e) {}
+    try { localStorage.setItem(COUNTER_KEY, String(n)); } catch (e) {}
+    const year = new Date().getFullYear();
+    return `ANG-${year}-${String(n).padStart(3, '0')}`;
+  }
+
+  const fNummer = document.getElementById('fNummer');
+  const fDatum = document.getElementById('fDatum');
+  const fGueltig = document.getElementById('fGueltig');
+  const fKundeName = document.getElementById('fKundeName');
+  const fKundeAdresse = document.getElementById('fKundeAdresse');
+  const fKleinunternehmer = document.getElementById('fKleinunternehmer');
+  const fAnmerkung = document.getElementById('fAnmerkung');
+
+  function todayISO(offsetDays) {
+    const d = new Date();
+    if (offsetDays) d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+  }
+  function fmtDateDE(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  function fmtEUR(n) {
+    return (Math.round(n * 100) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  // ---- Items ----
+  let items = [];
+  function defaultItems() {
+    return [{ id: 'i1', desc: 'Prüfung ortsveränderlicher elektrischer Betriebsmittel nach DIN VDE 0701-0702', menge: 8, preis: 9.5 }];
+  }
+
+  function renderItems() {
+    const container = document.getElementById('itemsTable');
+    let html = '';
+    items.forEach((it, idx) => {
+      const summe = (Number(it.menge) || 0) * (Number(it.preis) || 0);
+      html += `<div class="item-row" data-id="${it.id}">
+        <div class="field f-desc"><label>Beschreibung</label><input type="text" class="it-desc" value="${escapeHtml(it.desc)}"></div>
+        <div class="field f-menge"><label>Menge</label><input type="number" class="it-menge" min="0" step="1" value="${it.menge}"></div>
+        <div class="field f-preis"><label>Preis/St.</label><input type="number" class="it-preis" min="0" step="0.5" value="${it.preis}"></div>
+        <div class="field f-summe"><label>Summe</label><div class="item-sum">${fmtEUR(summe)}</div></div>
+        <button class="item-del f-del" data-id="${it.id}">✕</button>
+      </div>`;
+    });
+    container.innerHTML = html;
+
+    container.querySelectorAll('.item-row').forEach(row => {
+      const id = row.dataset.id;
+      row.querySelector('.it-desc').addEventListener('input', (e) => { updateItem(id, 'desc', e.target.value); });
+      row.querySelector('.it-menge').addEventListener('input', (e) => { updateItem(id, 'menge', e.target.value); });
+      row.querySelector('.it-preis').addEventListener('input', (e) => { updateItem(id, 'preis', e.target.value); });
+    });
+    container.querySelectorAll('.item-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        items = items.filter(i => i.id !== btn.dataset.id);
+        renderItems();
+        render();
+      });
+    });
+  }
+
+  function updateItem(id, field, value) {
+    const it = items.find(i => i.id === id);
+    if (!it) return;
+    it[field] = field === 'desc' ? value : Number(value);
+    renderItems();
+    render();
+  }
+
+  document.getElementById('addItemBtn').addEventListener('click', () => {
+    items.push({ id: 'i_' + Date.now(), desc: '', menge: 1, preis: 0 });
+    renderItems();
+    render();
+  });
+
+  // ---- Render preview document ----
+  function render() {
+    document.getElementById('docKontakt').textContent =
+      [fTelefon.value, fEmail.value].filter(Boolean).join(' · ');
+    document.getElementById('docNummer').textContent = fNummer.value;
+    document.getElementById('docNummer2').textContent = fNummer.value;
+    document.getElementById('docDatum').textContent = fmtDateDE(fDatum.value);
+    document.getElementById('docGueltig').textContent = fmtDateDE(fGueltig.value);
+    document.getElementById('docAdresse').textContent =
+      (fKundeName.value ? fKundeName.value + '\n' : '') + (fKundeAdresse.value || '');
+
+    let gesamt = 0;
+    let rows = '';
+    items.forEach(it => {
+      const summe = (Number(it.menge) || 0) * (Number(it.preis) || 0);
+      gesamt += summe;
+      rows += `<tr>
+        <td>${escapeHtml(it.desc || '—')}</td>
+        <td class="num">${it.menge}</td>
+        <td class="num">${fmtEUR(it.preis)}</td>
+        <td class="num">${fmtEUR(summe)}</td>
+      </tr>`;
+    });
+    document.getElementById('docItems').innerHTML = rows;
+    document.getElementById('docNetto').textContent = fmtEUR(gesamt);
+    document.getElementById('docGesamt').textContent = fmtEUR(gesamt);
+
+    const ustRow = document.getElementById('docUstRow');
+    const kuNote = document.getElementById('docKleinunternehmer');
+    if (fKleinunternehmer.checked) {
+      ustRow.style.display = '';
+      kuNote.style.display = 'block';
+    } else {
+      ustRow.style.display = 'none';
+      kuNote.style.display = 'none';
+    }
+    document.getElementById('docAnmerkung').textContent = fAnmerkung.value;
+
+    const footerParts = [];
+    if (fIban.value) footerParts.push(`Zahlungsziel: 14 Tage nach Rechnungsstellung · IBAN: ${fIban.value}`);
+    let firmZeile = 'Saric Elektro-Prüfservice' + (fInhaber.value ? ', Inhaber ' + fInhaber.value : '') + ' · Apenrader Weg 40 · 24768 Rendsburg';
+    if (fSteuernummer.value) firmZeile += ' · Steuernummer: ' + fSteuernummer.value;
+    footerParts.push(firmZeile);
+    if (fTelefon.value || fEmail.value) footerParts.push([fTelefon.value, fEmail.value].filter(Boolean).join(' · '));
+    document.getElementById('docFooter').textContent = footerParts.join('\n');
+
+    document.getElementById('docSignatur').textContent =
+      'Saric Elektro-Prüfservice' + (fInhaber.value ? '\n' + fInhaber.value : '');
+  }
+
+  [fNummer, fDatum, fGueltig, fKundeName, fKundeAdresse, fKleinunternehmer, fAnmerkung].forEach(el => {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  // ---- New offer ----
+  function resetForm() {
+    fNummer.value = nextNummer();
+    fDatum.value = todayISO(0);
+    fGueltig.value = todayISO(30);
+    fKundeName.value = '';
+    fKundeAdresse.value = '';
+    fKleinunternehmer.checked = true;
+    fAnmerkung.value = '';
+    items = defaultItems();
+    renderItems();
+    render();
+  }
+  document.getElementById('newBtn').addEventListener('click', resetForm);
+
+  // ---- History ----
+  const HISTORY_KEY = 'saric_ang_history_v1';
+  let history = [];
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    history = raw ? JSON.parse(raw) : [];
+  } catch (e) { history = []; }
+  function saveHistoryStore() {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (e) {}
+  }
+  function renderHistory() {
+    const container = document.getElementById('historyList');
+    if (history.length === 0) {
+      container.innerHTML = '<div style="font-size:12.5px;color:var(--text-faint);padding:8px 0;">Noch keine Angebote gespeichert.</div>';
+      return;
+    }
+    let html = '';
+    [...history].reverse().forEach(h => {
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px;">
+        <div>
+          <div style="font-weight:600;">${escapeHtml(h.nummer)} — ${escapeHtml(h.kunde || 'Ohne Namen')}</div>
+          <div style="color:var(--text-faint);font-size:11px;">${fmtDateDE(h.datum)}</div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:600;">${fmtEUR(h.gesamt)}</div>
+        <button class="item-del" data-hid="${h.id}" style="margin-left:8px;">✕</button>
+      </div>`;
+    });
+    container.innerHTML = html;
+    container.querySelectorAll('[data-hid]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        history = history.filter(h => h.id !== btn.dataset.hid);
+        saveHistoryStore();
+        renderHistory();
+      });
+    });
+  }
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const gesamt = items.reduce((sum, it) => sum + (Number(it.menge) || 0) * (Number(it.preis) || 0), 0);
+    history.push({
+      id: 'h_' + Date.now(),
+      nummer: fNummer.value,
+      kunde: fKundeName.value.trim(),
+      datum: fDatum.value,
+      gesamt
+    });
+    saveHistoryStore();
+    renderHistory();
+  });
+
+  // ---- Init ----
+  resetForm();
+  renderHistory();
+})();
+</script>
+
+</body>
+</html>
